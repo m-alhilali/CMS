@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,22 +20,21 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"UPDATE Specialties 
-                            Set SpecialtyName=@SpecialtyName,IsActive=@IsActive
-                            Where SpecialtyID=@SpecialtyID";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                   
+                    using (SqlCommand command = new SqlCommand("SP_UpdateSpecialty", connection))
                     {
-                        command.Parameters.AddWithValue(@"SpecialtyID", SpecialtyID);
-                        command.Parameters.AddWithValue(@"SpecialtyName", SpecialtyName);
-                        command.Parameters.AddWithValue(@"IsActive", IsActive);
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.Add(@"SpecialtyID", SqlDbType.Int).Value= SpecialtyID;
+                        command.Parameters.Add(@"SpecialtyName", SqlDbType.NVarChar,200).Value=SpecialtyName;
+                        command.Parameters.Add(@"IsActive", SqlDbType.Bit).Value = IsActive;
 
                         EfferctedRow = command.ExecuteNonQuery();
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
-                EfferctedRow = -1;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return EfferctedRow > 0;
         }
@@ -48,31 +48,32 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"INSERT INTO 
-                            Specialties(SpecialtyName,IsActive)
-                            Values(@SpecialtyName,@IsActive)
-                             Select Scope_Identity()";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                   
+                    using (SqlCommand command = new SqlCommand("SP_AddNewSpecialty", connection))
                     {
-                        command.Parameters.AddWithValue(@"SpecialtyName", SpecialtyName);
-                        command.Parameters.AddWithValue(@"IsActive", IsActive);
-                        object result = command.ExecuteScalar();
-                        if (result != null && int.TryParse(result.ToString(), out int insertedID))
+                        command.CommandType = CommandType.StoredProcedure;
+
+                        command.Parameters.Add(@"SpecialtyName", SqlDbType.NVarChar,200).Value= SpecialtyName;
+                        command.Parameters.Add(@"IsActive", SqlDbType.Bit).Value= IsActive;
+                        SqlParameter parameter = command.Parameters.Add("SpecialtyID", SqlDbType.Int);
+                        parameter.Direction= ParameterDirection.Output;
+                        command.ExecuteNonQuery();
+                        if (parameter.Value != null && parameter.Value!=DBNull.Value && Convert.ToInt32(parameter.Value)>0)
                         {
-                            SpecialtyID = insertedID;
+                            SpecialtyID = Convert.ToInt32(parameter.Value);
                         }
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
-
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return SpecialtyID;
         }
         public static bool UpdateStatus(int SpecialtyID,bool IsActive)
         {
-            bool DeActive = false;
+            bool NewStatus = false;
 
             try
             {
@@ -80,24 +81,22 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"Update Specialties 
-                             Set IsActive=@IsActive
-                            Where SpecialtyID=@SpecialtyID";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                    using (SqlCommand command = new SqlCommand("SP_UpdateSpecialtyStatus", connection))
                     {
-                        command.Parameters.AddWithValue(@"SpecialtyID", SpecialtyID);
-                        command.Parameters.AddWithValue(@"IsActive", IsActive);
-                        int reader = command.ExecuteNonQuery();
-                        DeActive = reader > 0;
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.Add(@"SpecialtyID", SqlDbType.Int).Value = SpecialtyID;
+                        command.Parameters.Add(@"IsActive", SqlDbType.Bit).Value = IsActive;
+                        int rowEffected = command.ExecuteNonQuery();
+                        NewStatus = rowEffected > 0;
                     }
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
-                DeActive = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
-            return DeActive;
+            return NewStatus;
         }
         public static bool GetBySpecialtyID(int SpecialtyID, ref string SpecialtyName,ref bool IsActive)
         {
@@ -108,30 +107,32 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"Select * from Specialties 
-                            Where SpecialtyID=@SpecialtyID ";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                    using (SqlCommand command = new SqlCommand("SP_GetSpecialtyByID", connection))
                     {
-                        command.Parameters.AddWithValue(@"SpecialtyID", SpecialtyID);
-
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        command.CommandType= CommandType.StoredProcedure;
+                        command.Parameters.Add(@"SpecialtyID", SqlDbType.Int).Value=SpecialtyID;
+                        SqlParameter NameParameters = command.Parameters.Add(@"SpecialtyName", SqlDbType.NVarChar, 200);
+                        NameParameters.Direction = ParameterDirection.Output;
+                        SqlParameter IsActiveParameters = command.Parameters.Add(@"IsActive", SqlDbType.Bit);
+                        IsActiveParameters.Direction = ParameterDirection.Output;
+                        SqlParameter IsFoundParameters = command.Parameters.Add(@"@IsFound", SqlDbType.Int);
+                        IsFoundParameters.Direction = ParameterDirection.Output;
+                        command.ExecuteNonQuery();
+                        if (IsFoundParameters.Value!=null && IsFoundParameters.Value!=DBNull.Value &&Convert.ToInt32(IsFoundParameters.Value)==1)
                         {
-                            if (reader.Read())
-                            {
-                                SpecialtyName = Convert.ToString(reader["SpecialtyName"]);
-                                IsActive = Convert.ToBoolean(reader["IsActive"]);
+                            SpecialtyName = Convert.ToString(NameParameters.Value);
+                            IsActive = Convert.ToBoolean(IsActiveParameters.Value);
 
-                                IsFind = true;
-                            }
+                            IsFind = true;
                         }
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                IsFind = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
-           
+
             return IsFind;
         }
         public static DataTable GetAllSpecialties()
@@ -159,9 +160,9 @@ namespace CMS_Data
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
-                dt = null;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return dt;
         }
@@ -174,25 +175,24 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"Select Find=1 from Specialties 
-                            Where SpecialtyName=@SpecialtyName ";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                    using (SqlCommand command = new SqlCommand("SP_IsSpecialitiesExist", connection))
                     {
-                        command.Parameters.AddWithValue(@"SpecialtyName", SpecialtyName);
+                        command.CommandType = CommandType.StoredProcedure;
 
-                        object obj = command.ExecuteScalar();
-                        if (obj != null && int.TryParse(obj.ToString(), out int numberset))
-                        {
-
-                            IsExists = numberset>0 ? true : false;
-                        }
+                        command.Parameters.Add(@"SpecialtyName", SqlDbType.NVarChar,200).Value=SpecialtyName;
+                        SqlParameter parameter=new SqlParameter();
+                        parameter.Direction = ParameterDirection.ReturnValue;
+                        command.Parameters.Add(parameter);
+                         command.ExecuteNonQuery();
+                        int result = (parameter.Value != null && parameter.Value != DBNull.Value) ? Convert.ToInt32(parameter.Value) : 0;
+                        IsExists = (result == 1);
                     }
 
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                IsExists = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return IsExists;
         }
@@ -205,25 +205,24 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"Select Find=1 from Specialties 
-                            Where SpecialtyID=@SpecialtyID and IsActive=1";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                    using (SqlCommand command = new SqlCommand("SP_IsSpecialtiesActive", connection))
                     {
-                        command.Parameters.AddWithValue(@"SpecialtyID", SpecialtyID);
+                        command.CommandType = CommandType.StoredProcedure;
 
-                        object obj = command.ExecuteScalar();
-                        if (obj != null && int.TryParse(obj.ToString(), out int numberset))
-                        {
-
-                            IsExists = numberset > 0 ? true : false;
-                        }
+                        command.Parameters.Add(@"SpecialtyID", SqlDbType.Int).Value = SpecialtyID;
+                        SqlParameter parameter = new SqlParameter();
+                        parameter.Direction = ParameterDirection.ReturnValue;
+                        command.Parameters.Add(parameter);
+                        command.ExecuteNonQuery();
+                        int result = (parameter.Value != null && parameter.Value != DBNull.Value) ? Convert.ToInt32(parameter.Value) : 0;
+                        IsExists = (result == 1);
                     }
 
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                IsExists = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return IsExists;
         }
