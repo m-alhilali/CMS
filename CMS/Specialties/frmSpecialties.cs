@@ -205,7 +205,7 @@ namespace CMS.Specialties
             int SpecialtyID = Convert.ToInt32(dgvSpecialties.CurrentRow.Cells[0].Value);
 
             _Specialties = clsSpecialties.Find(SpecialtyID);
-            if (_dtSpecilaties == null)
+            if (_Specialties == null)
             {
                 return;
             }
