@@ -96,6 +96,7 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
+                    //This will not delete doctor but will change him status to deactive
                     string Query = @"UpdateStatus Patients 
                             Where PatientID=@PatientID";
                     using (SqlCommand command = new SqlCommand(Query, connection))

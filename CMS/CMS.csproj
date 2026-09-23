@@ -38,17 +38,20 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FontAwesome.Sharp">
-      <HintPath>D:\FontAwesom\FontAwesome.Sharp.6.6.0\lib\net48\FontAwesome.Sharp.dll</HintPath>
+    <Reference Include="FontAwesome.Sharp, Version=6.6.0.0, Culture=neutral, PublicKeyToken=d16d1e4e568ec10f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\MyLibraries\FontAwesom\FontAwesome.Sharp.6.6.0\lib\net48\FontAwesome.Sharp.dll</HintPath>
     </Reference>
-    <Reference Include="Guna.UI2">
-      <HintPath>D:\Guna2\guna.ui2.winforms.2.0.4.8\lib\net48\Guna.UI2.dll</HintPath>
+    <Reference Include="Guna.UI2, Version=2.0.4.8, Culture=neutral, PublicKeyToken=8b9d14aa5142e261, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\MyLibraries\Guna2\guna.ui2.winforms.2.0.4.8\lib\net48\Guna.UI2.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="ReaLTaiizor">
-      <HintPath>D:\RealTaiizor\realtaiizor\realtaiizor.3.8.1.8\lib\net48\ReaLTaiizor.dll</HintPath>
+    <Reference Include="ReaLTaiizor, Version=3.8.1.8, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\MyLibraries\RealTaiizor\realtaiizor\realtaiizor.3.8.1.8\lib\net48\ReaLTaiizor.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -67,9 +70,6 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="TrainingOnControlUsers">
-      <HintPath>..\TrainingOnControlUsers\bin\Debug\TrainingOnControlUsers.exe</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -382,12 +382,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CMS_Business\CMS_Business.csproj">
-      <Project>{1208dc6e-61c4-4b0d-9e30-983543760439}</Project>
-      <Name>CMS_Business</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\manicon.jpg" />
   </ItemGroup>
   <ItemGroup>
@@ -434,6 +428,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Appointments1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CMS_Business\CMS_Business.csproj">
+      <Project>{1208dc6e-61c4-4b0d-9e30-983543760439}</Project>
+      <Name>CMS_Business</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
