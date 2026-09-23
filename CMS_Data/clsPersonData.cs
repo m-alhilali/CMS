@@ -34,7 +34,7 @@ namespace CMS_Data
                         command.Parameters.Add(@"Gender",     SqlDbType.TinyInt).Value=Gender;
                         command.Parameters.Add(@"NationalityCountryID", SqlDbType.Int, 50).Value= NationalityCountryID;
                         command.Parameters.Add(@"Phone", SqlDbType.NVarChar, 20).Value = Phone;
-                        command.Parameters.Add(@"Address", SqlDbType.Int, 300).Value = Address;
+                        command.Parameters.Add(@"Address", SqlDbType.NVarChar, 300).Value = Address;
                         if (!string.IsNullOrWhiteSpace(ImagePath))
                             command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250).Value = ImagePath;
                         else
@@ -72,7 +72,7 @@ namespace CMS_Data
                         command.Parameters.Add(@"Gender", SqlDbType.TinyInt).Value = Gender;
                         command.Parameters.Add(@"NationalityCountryID", SqlDbType.Int, 50).Value = NationalityCountryID;
                         command.Parameters.Add(@"Phone", SqlDbType.NVarChar, 20).Value = Phone;
-                        command.Parameters.Add(@"Address", SqlDbType.Int, 300).Value = Address;
+                        command.Parameters.Add(@"Address", SqlDbType.NVarChar, 300).Value = Address;
                         if (!string.IsNullOrWhiteSpace(ImagePath))
                             command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250).Value = ImagePath;
                         else
