@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -19,88 +20,77 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"UPDATE People 
-                            Set NationalNo=@NationalNo,FirstName=@FirstName,SecondName=@SecondName,
-                                   ThirdName=@ThirdName,LastName=@LastName,DateOfBirth=@DateOfBirth,
-                                   Gender=@Gender,NationalityCountryID=@NationalityCountryID,
-                                   Phone=@Phone,Address=@Address,ImagePath=@ImagePath
-                            Where PersonID=@PersonID";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                   
+                    using (SqlCommand command = new SqlCommand("SP_UpdatePerson", connection))
                     {
-                        command.Parameters.AddWithValue(@"PersonID", PersonID);
-                        command.Parameters.AddWithValue(@"NationalNo", NationalNo);
-                        command.Parameters.AddWithValue(@"FirstName", FirstName);
-                        command.Parameters.AddWithValue(@"SecondName", SecondName);
-                        command.Parameters.AddWithValue(@"ThirdName", ThirdName);
-                        command.Parameters.AddWithValue(@"LastName", LastName);
-                        command.Parameters.AddWithValue(@"DateOfBirth", DateOfBirth);
-                        command.Parameters.AddWithValue(@"Gender", Gender);
-                        command.Parameters.AddWithValue(@"NationalityCountryID", NationalityCountryID);
-                        command.Parameters.AddWithValue(@"Phone", Phone);
-                        command.Parameters.AddWithValue(@"Address", Address);
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.Add(@"PersonID",   SqlDbType.Int).Value=PersonID;
+                        command.Parameters.Add(@"NationalNo", SqlDbType.NVarChar,50).Value=NationalNo;
+                        command.Parameters.Add(@"FirstName",  SqlDbType.NVarChar, 50).Value=FirstName;
+                        command.Parameters.Add(@"SecondName", SqlDbType.NVarChar, 50).Value=SecondName;
+                        command.Parameters.Add(@"ThirdName",  SqlDbType.NVarChar, 50).Value=ThirdName;
+                        command.Parameters.Add(@"LastName",   SqlDbType.NVarChar, 50).Value=LastName;
+                        command.Parameters.Add(@"DateOfBirth",SqlDbType.DateTime).Value= DateOfBirth;
+                        command.Parameters.Add(@"Gender",     SqlDbType.TinyInt).Value=Gender;
+                        command.Parameters.Add(@"NationalityCountryID", SqlDbType.Int, 50).Value= NationalityCountryID;
+                        command.Parameters.Add(@"Phone", SqlDbType.NVarChar, 20).Value = Phone;
+                        command.Parameters.Add(@"Address", SqlDbType.Int, 300).Value = Address;
                         if (!string.IsNullOrWhiteSpace(ImagePath))
-                            command.Parameters.AddWithValue(@"ImagePath", ImagePath);
+                            command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250).Value = ImagePath;
                         else
-                            command.Parameters.AddWithValue(@"ImagePath", DBNull.Value);
+                            command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250).Value = DBNull.Value;
 
                         EfferctedRow = command.ExecuteNonQuery();
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                EfferctedRow = -1;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return EfferctedRow>0;
         }
         public static int AddNewPerson(string NationalNo,string FirstName, string SecondName, string ThirdName, string LastName, DateTime DateOfBirth, byte Gender, byte NationalityCountryID,string Phone,string Address,string ImagePath)
         {
-            int NewPersonID = -1;
+            int PersonID = -1;
             try
             {
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"INSERT INTO 
-                            People(NationalNo,FirstName,SecondName,
-                                   ThirdName,LastName,DateOfBirth,
-                                   Gender,NationalityCountryID,
-                                   Phone,Address,ImagePath)
-                            Values(@NationalNo,@FirstName,@SecondName,
-                                   @ThirdName,@LastName,@DateOfBirth,
-                                   @Gender,@NationalityCountryID,
-                                   @Phone,@Address,@ImagePath)
-                             Select Scope_Identity()";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                    using (SqlCommand command = new SqlCommand("SP_AddNewPerson", connection))
                     {
-                        command.Parameters.AddWithValue(@"NationalNo", NationalNo);
-                        command.Parameters.AddWithValue(@"FirstName", FirstName);
-                        command.Parameters.AddWithValue(@"SecondName", SecondName);
-                        command.Parameters.AddWithValue(@"ThirdName", ThirdName);
-                        command.Parameters.AddWithValue(@"LastName", LastName);
-                        command.Parameters.AddWithValue(@"DateOfBirth", DateOfBirth);
-                        command.Parameters.AddWithValue(@"Gender", Gender);
-                        command.Parameters.AddWithValue(@"NationalityCountryID", NationalityCountryID);
-                        command.Parameters.AddWithValue(@"Phone", Phone);
-                        command.Parameters.AddWithValue(@"Address", Address);
+                        command.CommandType = CommandType.StoredProcedure;
+                        SqlParameter PersonIDParam=command.Parameters.Add(@"PersonID", SqlDbType.Int);
+                        PersonIDParam.Direction = ParameterDirection.Output;
+                        command.Parameters.Add(@"NationalNo", SqlDbType.NVarChar, 50).Value = NationalNo;
+                        command.Parameters.Add(@"FirstName", SqlDbType.NVarChar, 50).Value = FirstName;
+                        command.Parameters.Add(@"SecondName", SqlDbType.NVarChar, 50).Value = SecondName;
+                        command.Parameters.Add(@"ThirdName", SqlDbType.NVarChar, 50).Value = ThirdName;
+                        command.Parameters.Add(@"LastName", SqlDbType.NVarChar, 50).Value = LastName;
+                        command.Parameters.Add(@"DateOfBirth", SqlDbType.DateTime).Value = DateOfBirth;
+                        command.Parameters.Add(@"Gender", SqlDbType.TinyInt).Value = Gender;
+                        command.Parameters.Add(@"NationalityCountryID", SqlDbType.Int, 50).Value = NationalityCountryID;
+                        command.Parameters.Add(@"Phone", SqlDbType.NVarChar, 20).Value = Phone;
+                        command.Parameters.Add(@"Address", SqlDbType.Int, 300).Value = Address;
                         if (!string.IsNullOrWhiteSpace(ImagePath))
-                            command.Parameters.AddWithValue(@"ImagePath", ImagePath);
+                            command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250).Value = ImagePath;
                         else
-                            command.Parameters.AddWithValue(@"ImagePath", DBNull.Value);
+                            command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250).Value = DBNull.Value;
 
-                        object result = command.ExecuteScalar();
-                        if (result != null && int.TryParse(result.ToString(), out int insertedID))
+                        command.ExecuteNonQuery();
+                        if (PersonIDParam.Value != null&&PersonIDParam.Value != DBNull.Value && int.TryParse(PersonIDParam.Value.ToString(), out int insertedID))
                         {
-                            NewPersonID = insertedID;
+                            PersonID = insertedID;
                         }
                     }
                 }
             }
-            catch
+            catch(Exception ex)
             {
-
+                clsEventLog.TypeErrorInViwerLog(ex.Message,EventLogEntryType.Error);
             }
-            return NewPersonID;
+            return PersonID;
         }
         public static bool IsPersonExists( string NationalNo)
         {
@@ -122,9 +112,9 @@ namespace CMS_Data
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
-                IsExists = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return IsExists;
         }
@@ -149,11 +139,11 @@ namespace CMS_Data
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
-                IsExists = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
-           
+
             return IsExists;
         }
         public static bool Delete( int PersonID)
@@ -178,9 +168,9 @@ namespace CMS_Data
 
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                IsDeleted = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return IsDeleted;
         }
@@ -195,40 +185,65 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"Select * from People 
-                            Where NationalNo=@NationalNo";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                   
+                    using (SqlCommand command = new SqlCommand("SP_GetPersonInfoByNationalNo", connection))
                     {
-                        command.Parameters.AddWithValue(@"NationalNo", NationalNo);
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.Add(@"NationalNo", SqlDbType.NVarChar, 50).Value = NationalNo;
+                        var PersonIDparameter = command.Parameters.Add(@"PersonID", SqlDbType.Int);
+                        PersonIDparameter.Direction = ParameterDirection.Output;
+                        var FirstNameparameter = command.Parameters.Add(@"FirstName", SqlDbType.NVarChar, 50);
+                        FirstNameparameter.Direction = ParameterDirection.Output;
+                        var SecondNameparameter = command.Parameters.Add(@"SecondName", SqlDbType.NVarChar, 50);
+                        SecondNameparameter.Direction = ParameterDirection.Output;
+                        var ThirdNameparamerter = command.Parameters.Add(@"ThirdName", SqlDbType.NVarChar, 50);
+                        ThirdNameparamerter.Direction = ParameterDirection.Output;
+                        var LastNameparameter = command.Parameters.Add(@"LastName", SqlDbType.NVarChar, 50);
+                        LastNameparameter.Direction = ParameterDirection.Output;
+                        var DateOfBirthparameter = command.Parameters.Add(@"DateOfBirth", SqlDbType.DateTime);
+                        DateOfBirthparameter.Direction = ParameterDirection.Output;
+                        var Genderparameter = command.Parameters.Add(@"Gender", SqlDbType.TinyInt);
+                        Genderparameter.Direction = ParameterDirection.Output;
+                        var NationalityCountryIDparameter = command.Parameters.Add(@"NationalityCountryID", SqlDbType.Int);
+                        NationalityCountryIDparameter.Direction = ParameterDirection.Output;
+                        var Phoneparameter = command.Parameters.Add(@"Phone", SqlDbType.NVarChar, 20);
+                        Phoneparameter.Direction = ParameterDirection.Output;
+                        var Addressparameter = command.Parameters.Add(@"Address", SqlDbType.NVarChar, 300);
+                        Addressparameter.Direction = ParameterDirection.Output;
+                        var ImagePathparameter = command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250);
+                        ImagePathparameter.Direction = ParameterDirection.Output;
+                        var IsFoundparameter = command.Parameters.Add(@"IsFound", SqlDbType.Int);
+                        IsFoundparameter.Direction = ParameterDirection.Output;
 
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        command.ExecuteNonQuery();
+
+                        if (IsFoundparameter.Value != null && IsFoundparameter.Value != DBNull.Value && Convert.ToInt32(IsFoundparameter.Value) == 1)
                         {
-                            if (reader.Read())
-                            {
-                                PersonID = Convert.ToInt32(reader["PersonID"]);
-                                FirstName = Convert.ToString(reader["FirstName"]);
-                                SecondName = Convert.ToString(reader["SecondName"]);
-                                ThirdName = Convert.ToString(reader["ThirdName"]);
-                                LastName = Convert.ToString(reader["LastName"]);
-                                DateOfBirth = Convert.ToDateTime(reader["DateOfBirth"]);
-                                Gender = Convert.ToByte(reader["Gender"]);
-                                NationalityCountryID = Convert.ToByte(reader["NationalityCountryID"]);
-                                Phone = Convert.ToString(reader["Phone"]);
-                                Address = Convert.ToString(reader["Address"]);
-                                if (reader["ImagePath"] != DBNull.Value)
-                                    ImagePath = Convert.ToString(reader["ImagePath"]);
-                                else
-                                    ImagePath = "";
-                                IsFind = true;
-                            }
+                            PersonID = Convert.ToInt32(PersonIDparameter.Value);
+                            FirstName = Convert.ToString(FirstNameparameter.Value);
+                            SecondName = Convert.ToString(SecondNameparameter.Value);
+                            ThirdName = Convert.ToString(ThirdNameparamerter.Value);
+                            LastName = Convert.ToString(LastNameparameter.Value);
+                            DateOfBirth = Convert.ToDateTime(DateOfBirthparameter.Value);
+                            Gender = Convert.ToByte(Genderparameter.Value);
+                            NationalityCountryID = Convert.ToByte(NationalityCountryIDparameter.Value);
+                            Phone = Convert.ToString(Phoneparameter.Value);
+                            Address = Convert.ToString(Addressparameter.Value);
+                            if (ImagePathparameter.Value != DBNull.Value && ImagePathparameter.Value!= null)
+                                ImagePath = Convert.ToString(ImagePathparameter.Value);
+                            else
+                                ImagePath = "";
+                            IsFind = true;
+
                         }
+
                     }
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
-                IsFind = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return IsFind;
         }
@@ -243,42 +258,63 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"Select * from People 
-                            Where PersonID=@PersonID";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                    using (SqlCommand command = new SqlCommand("SP_GetPersonInfoByPersonID", connection))
                     {
-                        command.Parameters.AddWithValue(@"PersonID", PersonID);
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.Add(@"PersonID", SqlDbType.Int).Value = PersonID;
+                        var NationalNoparameter = command.Parameters.Add(@"NationalNo", SqlDbType.NVarChar,50);
+                        NationalNoparameter.Direction = ParameterDirection.Output;
+                        var FirstNameparameter = command.Parameters.Add(@"FirstName", SqlDbType.NVarChar, 50);
+                        FirstNameparameter.Direction = ParameterDirection.Output;
+                        var SecondNameparameter = command.Parameters.Add(@"SecondName", SqlDbType.NVarChar, 50);
+                        SecondNameparameter.Direction = ParameterDirection.Output;
+                        var ThirdNameparamerter = command.Parameters.Add(@"ThirdName", SqlDbType.NVarChar, 50);
+                        ThirdNameparamerter.Direction = ParameterDirection.Output;
+                        var LastNameparameter = command.Parameters.Add(@"LastName", SqlDbType.NVarChar, 50);
+                        LastNameparameter.Direction = ParameterDirection.Output;
+                        var DateOfBirthparameter = command.Parameters.Add(@"DateOfBirth", SqlDbType.DateTime);
+                        DateOfBirthparameter.Direction = ParameterDirection.Output;
+                        var Genderparameter = command.Parameters.Add(@"Gender", SqlDbType.TinyInt);
+                        Genderparameter.Direction = ParameterDirection.Output;
+                        var NationalityCountryIDparameter = command.Parameters.Add(@"NationalityCountryID", SqlDbType.Int);
+                        NationalityCountryIDparameter.Direction = ParameterDirection.Output;
+                        var Phoneparameter = command.Parameters.Add(@"Phone", SqlDbType.NVarChar, 20);
+                        Phoneparameter.Direction = ParameterDirection.Output;
+                        var Addressparameter = command.Parameters.Add(@"Address", SqlDbType.NVarChar, 300);
+                        Addressparameter.Direction = ParameterDirection.Output;
+                        var ImagePathparameter = command.Parameters.Add(@"ImagePath", SqlDbType.NVarChar, 250);
+                        ImagePathparameter.Direction = ParameterDirection.Output;
+                        var IsFoundparameter = command.Parameters.Add(@"IsFound", SqlDbType.Int);
+                        IsFoundparameter.Direction = ParameterDirection.Output;
 
+                        command.ExecuteNonQuery();
 
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        if (IsFoundparameter.Value != null && IsFoundparameter.Value != DBNull.Value && Convert.ToInt32(IsFoundparameter.Value) == 1)
                         {
-                            if (reader.Read())
-                            {
-                                NationalNo = Convert.ToString(reader["NationalNo"]);
-                                FirstName = Convert.ToString(reader["FirstName"]);
-                                SecondName = Convert.ToString(reader["SecondName"]);
-                                ThirdName = Convert.ToString(reader["ThirdName"]);
-                                LastName = Convert.ToString(reader["LastName"]);
-                                DateOfBirth = Convert.ToDateTime(reader["DateOfBirth"]);
-                                Gender = Convert.ToByte(reader["Gender"]);
-                                NationalityCountryID = Convert.ToByte(reader["NationalityCountryID"]);
-                                Phone = Convert.ToString(reader["Phone"]);
-                                Address = Convert.ToString(reader["Address"]);
-                                if (reader["ImagePath"] != DBNull.Value)
-                                    ImagePath = Convert.ToString(reader["ImagePath"]);
-                                else
-                                    ImagePath = "";
-                                IsFind = true;
-                            }
+                            NationalNo = Convert.ToString(NationalNoparameter.Value);
+                            FirstName = Convert.ToString(FirstNameparameter.Value);
+                            SecondName = Convert.ToString(SecondNameparameter.Value);
+                            ThirdName = Convert.ToString(ThirdNameparamerter.Value);
+                            LastName = Convert.ToString(LastNameparameter.Value);
+                            DateOfBirth = Convert.ToDateTime(DateOfBirthparameter.Value);
+                            Gender = Convert.ToByte(Genderparameter.Value);
+                            NationalityCountryID = Convert.ToByte(NationalityCountryIDparameter.Value);
+                            Phone = Convert.ToString(Phoneparameter.Value);
+                            Address = Convert.ToString(Addressparameter.Value);
+                            if (ImagePathparameter.Value != DBNull.Value && ImagePathparameter.Value != null)
+                                ImagePath = Convert.ToString(ImagePathparameter.Value);
+                            else
+                                ImagePath = "";
+                            IsFind = true;
                         }
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                IsFind = false;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
-           
+
             return IsFind;
         }
 
@@ -306,9 +342,9 @@ namespace CMS_Data
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
-                dt = null;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return dt;
         }
@@ -320,26 +356,21 @@ namespace CMS_Data
                 using (SqlConnection connection = new SqlConnection(clsDataSittings.connectionString))
                 {
                     connection.Open();
-                    string Query = @"Select PersonID,NationalNo,FirstName,SecondName,ThirdName,LastName,
-                             DateOfBirth,Case When Gender=0 then 'Male' else 'Female'end as Gender,Phone,CountryName as Nationality,Address,ImagePath from People join Countries On People.NationalityCountryID=Countries.CountryID 
-                             Order by PersonID";
-                    using (SqlCommand command = new SqlCommand(Query, connection))
+                    using (SqlCommand command = new SqlCommand("SP_GetPeopleList", connection))
                     {
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        command.CommandType= CommandType.StoredProcedure;
+                        using (SqlDataAdapter reader = new SqlDataAdapter(command))
                         {
-                            if (reader.HasRows)
-                            {
-                                dt.Load(reader);
-                            }
+                            reader.Fill(dt);
                         }
                     }
 
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
-                dt = null;
+                clsEventLog.TypeErrorInViwerLog(ex.Message, EventLogEntryType.Error);
             }
             return dt;
         }
